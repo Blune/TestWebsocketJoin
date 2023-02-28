@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Simples streichholzziehen</title>
+</head>
+<body>
+
+  <label for="name">Name eingeben</label>
+  <input type="text" id="name" name="name">
+  <label for="session">Session eingeben</label>
+  <input type="text" id="session" name="session"><br>
+  
+  <button onclick="anmelden()">Anmelden</button>
+  
+  <br><br>
+	<h1>Zieh ein Streichholz</h1>
+  <p id="connection">Nicht verbunden</p>
+  <label for="matchNumber">Wähle Streichholz:</label>
+  <input type="text" id="matchNumber" name="matchNumber">
+  <button onclick="sendToServer()">Senden</button><br><br>
+  <button onclick="sendResetToServer()">Reset</button>
+
+  <p id="result"></p>
+<script>
+
+var ws = null;
+var username = null;
+var sessionId = null;
+
+function sendToServer() {
+  sessionId = document.getElementById('session').value;
+  var input = document.getElementById('matchNumber').value;
+  var user = document.getElementById('name').value;
+  var data = { 
+    "type": "Draw",
+    "sessionId": sessionId,
+    "username": user,
+    "pick": input
+  }
+  ws.send(JSON.stringify(data));
+}
+
+
+function sendResetToServer() {
+  var data = { 
+    "type": "Reset",
+    "sessionId": sessionId,
+    "username": username,
+  }
+  ws.send(JSON.stringify(data));
+} 
+
+function anmelden() {
+  ws = new WebSocket("ws://node-web-app-tabie2y3hq-uc.a.run.app/")
+
+  ws.addEventListener("open", () =>{
+  document.getElementById('connection').innerHTML = "Verbunden";
+
+  username = document.getElementById('name').value;
+  sessionId = document.getElementById('session').value;
+
+  var data = { 
+    "type": "Register",
+    "sessionId": sessionId,
+    "username": username
+  }
+  ws.send(JSON.stringify(data));
+});
+ 
+ws.addEventListener('close', function (event){
+  document.getElementById('connection').innerHTML = "Nicht verbunden";
+});
+
+ws.addEventListener('message', function (event) {
+    console.log(event.data);
+    let data = JSON.parse(event.data);
+
+    if(data.error.length > 0){
+      document.getElementById("result").innerHTML = document.getElementById("result").innerText = data.error;
+    }
+    else{
+      document.getElementById("result").innerHTML = document.getElementById("result").innerText = `
+      Ersteller: ${data.creator}<br>
+      Session: ${data.sessionId}<br>
+      Anzahl Streichhölzer: ${data.matches}<br>
+      Davon kurz: ${data.shorts}<br><br>
+      Frage: ${data.topic}<br>
+      Streichhölzer:<br>${data.picks.map((x,i) => i + 1 +(data.positionShorts[i] == "x" ? ": &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;====O" : ": =========O  ") + (x == null ? "": x)).join("<br>")}<br>
+      Kurz: ${data.shorts}<br>
+      Spieler: ${data.activePlayers.map(player => player.username).join(", ")}<br>
+      <br>Gewählt:<br>
+      ${data.picks.join("<br>")}
+      `;
+    }
+
+ 
+});
+}
+</script>
+
+</body>
+</html>
