@@ -52,7 +52,7 @@ function sendResetToServer() {
 } 
 
 function anmelden() {
-  ws = new WebSocket("ws://node-web-app-tabie2y3hq-uc.a.run.app/")
+  ws = new WebSocket("wss://node-web-app-tabie2y3hq-uc.a.run.app/")
 
   ws.addEventListener("open", () =>{
   document.getElementById('connection').innerHTML = "Verbunden";
