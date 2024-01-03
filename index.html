@@ -23,7 +23,15 @@
 
   <p id="result"></p>
 <script>
-
+// Check if there is an ID in the URL and pre-fill the input field
+window.onload = function () {
+var urlParams = new URLSearchParams(window.location.search);
+var idParam = urlParams.get('id');
+if (idParam) {
+document.getElementById('session').value = idParam;
+}
+};
+	
 var ws = null;
 var username = null;
 var sessionId = null;
